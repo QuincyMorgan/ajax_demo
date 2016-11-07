@@ -1,0 +1,140 @@
+<!--
+Quincy Morgan
+Geography 461W
+Ajax demo for micro-tutorial
+11/7/2016 -->
+<!DOCTYPE html>
+<style>
+	html *{
+		box-sizing:border-box;
+		border-collapse: collapse;
+	}
+	html{
+		background-color:#222;
+	}
+	body{
+		min-height:100vh;
+		max-width:1200px; 
+		margin: 0 auto;
+		padding:20px;
+		font-family:Helvetica,Arial,sans-serif;
+		background-color:#fff;
+		text-align:center;
+	}
+	#search-form > *{
+		font-size:22px;
+	}
+	#search-form{
+		margin-bottom:20px;
+	}
+	#results-container div{
+		width:140px;
+		height:140px;
+		display: inline-block;
+		background-repeat: no-repeat;
+		background-size:cover;
+		background-position:center center;
+		margin-left:8px;
+		margin-bottom:5px;
+	}
+</style>
+<html>
+	<head>
+		<title>
+			AJAX Micro-Tutorial Demo
+		</title>
+	</head>
+	<body>
+		<form id="search-form">
+			<input id="search-box" type="text" placeholder="Search images on Pixabay" autofocus/>
+			<button>Search</button>
+		</form>
+		<div id="results-container"></div>
+	</body>
+</html>
+<script>
+
+// get the form element from the html page
+var form = document.getElementById('search-form');
+
+// set the function to be run when enter key or search button is pressed
+form.onsubmit = function(){
+
+	// get the text box element from the html
+	var searchBox = document.getElementById('search-box');
+	// get the string the user is searching for
+	var searchTerm = searchBox.value;
+	
+	// encode the string so it may be passed as an api parameter in a url
+	var encodedSearchTerm = encodeURIComponent(searchTerm);
+	// api key needed to gain access to server
+	var apiKey = "743096-b99e452acfb49d31dc056d23f";
+	// set maximum number of images to return
+	var maxImages = 100;
+	// set the base url for the API
+	var apiBaseURL = "https://pixabay.com/api/"
+	
+	// concatenate URL for api endpoint, adding parameters
+	var apiURL = apiBaseURL+'?q='+encodedSearchTerm+'&key='+apiKey+'&per_page='+maxImages
+	
+	// create a new request
+	var request = new XMLHttpRequest();
+	
+	// setup request
+	request.open(
+		// type of HTTP request
+		'GET', 
+		// the destination url
+		apiURL,
+		// boolean to set asynchronous execution (which keeps the page from hanging)
+		true
+	);
+
+	// set the function to be run later when the request returns
+	request.onload = function(){
+	
+		// if this request is successful...
+		if(this.status >= 200 && this.status < 400){
+			
+			// create a JSON object from the returned JSON string
+			var json = JSON.parse(this.response);
+
+			// get array of image data from results JSON object
+			var images = json["hits"];
+			
+			// get the html element that will hold the result output
+			var resultsContainer = document.getElementById('results-container');
+			
+			// clear previous contents (image elements)
+			resultsContainer.innerHTML = "";
+			
+			// iterate through all the image data in the array
+			images.forEach(function (image, index, array) {
+				
+				// get url for the preview image resource
+				var imageURL = image["previewURL"];
+				
+				// get url for public page on Pixabay where user can get more info / access high res download
+				var pageURL = image["pageURL"];
+				
+				// create HTML element displaying image, linked to page 
+				var imageElement = "<a href='"+pageURL+"' target='_blank'><div style='background-image:url("+imageURL+")'></div></a>";
+				
+				// add result to the page without reloading
+				resultsContainer.insertAdjacentHTML("afterbegin", imageElement);
+			});
+			
+	  	}
+	};
+	
+	// execute the request to run asynchronously
+	request.send();
+	
+	// select text of search box to prepare for next query
+	searchBox.select();
+	
+	// return false to prevent form from reloading the page
+	return false;
+};
+
+</script>
